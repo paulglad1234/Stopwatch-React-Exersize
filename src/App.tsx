@@ -1,35 +1,46 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import {useState} from 'react'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+function Stopwatch({onRemove}: { onRemove: () => void }) {
+    return (
+        <div className="stopwatch">
+            <button onClick={onRemove}>D</button>
+            00:00:00
+        </div>
+    );
+}
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+type StopwatchId = number;
+
+function App() {
+    const [stopwatchIds, setStopwatchIds] = useState<StopwatchId[]>([]);
+
+    function getNewStopwatchId(): StopwatchId {
+        return stopwatchIds[stopwatchIds.length - 1] + 1 || 0;
+    }
+
+    function addStopwatch() {
+        const newId: StopwatchId = getNewStopwatchId();
+        setStopwatchIds([...stopwatchIds, newId]);
+    }
+
+    function removeStopwatch(id: StopwatchId) {
+        const index = stopwatchIds.indexOf(id);
+        setStopwatchIds([
+            ...stopwatchIds.slice(0, index),
+            ...stopwatchIds.slice(index + 1)
+        ]);
+    }
+
+    return (
+        <>
+            {stopwatchIds.map(id => (<Stopwatch key={id} onRemove={() => removeStopwatch(id)} />))}
+            <div>
+                <button onClick={addStopwatch}>Add stopwatch</button>
+                <button onClick={() => setStopwatchIds([])}>Clear All</button>
+            </div>
+        </>
+    );
 }
 
 export default App
