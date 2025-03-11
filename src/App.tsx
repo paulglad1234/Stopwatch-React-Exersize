@@ -27,7 +27,7 @@ function ClockFace({isRunning, startTime, pauseSnapshot}: {
 }
 
 function Stopwatch({onRemove}: { onRemove: () => void }) {
-    const [isRunning, setIsRunning] = useState<boolean | null>(null);
+    const [isRunning, setIsRunning] = useState<boolean | null>(null); // true - running, false - paused, null - reset
     const [startTime, setStartTime] = useState(new Date().getTime());
     const [pauseSnapshot, setPauseSnapshot] = useState(0);
 
@@ -111,5 +111,8 @@ export default App
 // "static" functions
 
 function msToString(ms: number) {
-    return `${Math.floor(ms / 3600000)}:${Math.floor(ms / 60000) % 60}:${Math.floor(ms / 1000) % 60}.${Math.floor((ms % 1000) / 10)}`
+    const minutes = (Math.floor(ms / 60000) % 60).toString().padStart(2, '0');
+    const seconds = (Math.floor(ms / 1000) % 60).toString().padStart(2, '0');
+    const tensOfMilliseconds = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
+    return `${Math.floor(ms / 3600000)}:${minutes}:${seconds}.${tensOfMilliseconds}`;
 }
