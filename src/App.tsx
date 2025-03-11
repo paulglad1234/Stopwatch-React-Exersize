@@ -46,6 +46,8 @@ function Stopwatch({onRemove}: { onRemove: () => void }) {
         setIsRunning(null);
     }
 
+    // could be a separate component, but it required passing down too much (isRunning + 3 functions),
+    // so it was easier to leave it here
     function getActiveSwControls() {
         if (isRunning) {
             return (<>
