@@ -1,39 +1,48 @@
 import {useState, useEffect} from 'react'
 import './App.css'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faPause, faStop, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faPlay, faPause, faStop, faTrashCan} from '@fortawesome/free-solid-svg-icons';
 
-function ClockFace({isRunning}: { isRunning: boolean | null }) {
-    const [time, setTime] = useState(0);
+function ClockFace({isRunning, startTime, pauseSnapshot}: {
+    isRunning: boolean | null,
+    startTime: number,
+    pauseSnapshot: number
+}) {
+    const [time, setTime] = useState(startTime + pauseSnapshot);
 
     useEffect(() => {
-        let intervalId: NodeJS.Timeout;
+        let intervalId: number | undefined;
         if (isRunning) {
-            intervalId = setInterval(() => setTime(time + 10), 10);
+            intervalId = setInterval(() => setTime(new Date().getTime()), 10);
         }
 
         return () => clearInterval(intervalId);
     }, [isRunning, time]);
 
-    function stringFromMs(ms: number) {
-        return `${Math.floor(ms / 3600000)}:${Math.floor(ms / 60000) % 60}:${Math.floor(ms / 1000) % 60}.${Math.floor((ms % 1000) / 10)}`
+    if (!isRunning && time !== startTime + pauseSnapshot) {
+        setTime(startTime + pauseSnapshot);
     }
 
-    return (<label>{stringFromMs(time)}</label>);
+    return (<label>{msToString(time - startTime)}</label>);
 }
 
 function Stopwatch({onRemove}: { onRemove: () => void }) {
     const [isRunning, setIsRunning] = useState<boolean | null>(null);
+    const [startTime, setStartTime] = useState(new Date().getTime());
+    const [pauseSnapshot, setPauseSnapshot] = useState(0);
 
     function run() {
+        setStartTime(new Date().getTime() - pauseSnapshot);
         setIsRunning(true);
     }
 
     function pause() {
+        setPauseSnapshot(new Date().getTime() - startTime);
         setIsRunning(false);
     }
 
     function reset() {
+        setPauseSnapshot(0);
         setIsRunning(null);
     }
 
@@ -57,8 +66,8 @@ function Stopwatch({onRemove}: { onRemove: () => void }) {
 
     return (
         <div className="stopwatch">
-            <ClockFace isRunning={isRunning}/>
             <button onClick={onRemove}><FontAwesomeIcon icon={faTrashCan} /></button>
+            <ClockFace isRunning={isRunning} startTime={startTime} pauseSnapshot={pauseSnapshot} />
             {activeSwControls}
         </div>
     );
@@ -88,7 +97,7 @@ function App() {
 
     return (
         <>
-            {stopwatchIds.map(id => (<Stopwatch key={id} onRemove={() => removeStopwatch(id)}/>))}
+            {stopwatchIds.map(id => (<Stopwatch key={id} onRemove={() => removeStopwatch(id)} />))}
             <div>
                 <button onClick={addStopwatch}>Add stopwatch</button>
                 <button onClick={() => setStopwatchIds([])}>Clear All</button>
@@ -98,3 +107,9 @@ function App() {
 }
 
 export default App
+
+// "static" functions
+
+function msToString(ms: number) {
+    return `${Math.floor(ms / 3600000)}:${Math.floor(ms / 60000) % 60}:${Math.floor(ms / 1000) % 60}.${Math.floor((ms % 1000) / 10)}`
+}
