@@ -1,5 +1,7 @@
 import {useState, useEffect} from 'react'
 import './App.css'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay, faPause, faStop, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 
 function ClockFace({isRunning}: { isRunning: boolean | null }) {
     const [time, setTime] = useState(0);
@@ -38,25 +40,25 @@ function Stopwatch({onRemove}: { onRemove: () => void }) {
     function getActiveSwControls() {
         if (isRunning) {
             return (<>
-                <button onClick={pause}>Pause</button>
-                <button onClick={reset}>Reset</button>
+                <button onClick={pause} title="Pause"><FontAwesomeIcon icon={faPause} /></button>
+                <button onClick={reset} title="Reset"><FontAwesomeIcon icon={faStop} /></button>
             </>);
         }
         if (isRunning !== null) {
             return (<>
-                <button onClick={run}>Resume</button>
-                <button onClick={reset}>Reset</button>
+                <button onClick={run} title="Resume"><FontAwesomeIcon icon={faPlay} /></button>
+                <button onClick={reset} title="Reset"><FontAwesomeIcon icon={faStop} /></button>
             </>);
         }
-        return (<button onClick={run}>Start</button>);
+        return (<button onClick={run} title="Start"><FontAwesomeIcon icon={faPlay} /></button>);
     }
 
     const activeSwControls = getActiveSwControls();
 
     return (
         <div className="stopwatch">
-            <button onClick={onRemove}>D</button>
             <ClockFace isRunning={isRunning}/>
+            <button onClick={onRemove}><FontAwesomeIcon icon={faTrashCan} /></button>
             {activeSwControls}
         </div>
     );
