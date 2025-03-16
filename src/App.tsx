@@ -3,6 +3,15 @@ import './App.css'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faPlay, faPause, faStop, faTrashCan} from '@fortawesome/free-solid-svg-icons';
 
+function RemoveButton({onRemove}: { onRemove: () => void }) {
+    // Profiler showed that for some reason the trash can icon got re-rendered every update of ClockFace
+    // My first instinct was to move it to this separate component, and it somehow helped...
+    // Probably need to run it by mentors
+    return (<button onClick={onRemove}><FontAwesomeIcon icon={faTrashCan}/></button>);
+
+    // off-topic: also ask a mentor about `function name()` vs `const name = function ()`
+}
+
 function ClockFace({isRunning, startTime, pauseSnapshot}: {
     isRunning: boolean | null,
     startTime: number,
@@ -11,9 +20,9 @@ function ClockFace({isRunning, startTime, pauseSnapshot}: {
     const [time, setTime] = useState(startTime + pauseSnapshot);
 
     useEffect(() => {
-        let intervalId: number | undefined;
+        let intervalId: ReturnType<typeof setInterval> | undefined;
         if (isRunning) {
-            intervalId = setInterval(() => setTime(new Date().getTime()), 10);
+            intervalId = setInterval(() => setTime(new Date().getTime()), 1000 / 60); // run setTime at 60 hertz
         }
 
         return () => clearInterval(intervalId);
@@ -24,6 +33,24 @@ function ClockFace({isRunning, startTime, pauseSnapshot}: {
     }
 
     return (<label>{msToString(time - startTime)}</label>);
+}
+
+function ButtonsWhenRunning({onPause, onReset}: { onPause: () => void, onReset: () => void }) {
+    return (<>
+        <button onClick={onPause} title="Pause"><FontAwesomeIcon icon={faPause}/></button>
+        <button onClick={onReset} title="Reset"><FontAwesomeIcon icon={faStop}/></button>
+    </>);
+}
+
+function ButtonsWhenPaused({onResume, onReset}: { onResume: () => void, onReset: () => void }) {
+    return (<>
+        <button onClick={onResume} title="Resume"><FontAwesomeIcon icon={faPlay}/></button>
+        <button onClick={onReset} title="Reset"><FontAwesomeIcon icon={faStop}/></button>
+    </>);
+}
+
+function ButtonsWhenStopped({onStart}: { onStart: () => void }) {
+    return (<button onClick={onStart} title="Start"><FontAwesomeIcon icon={faPlay}/></button>);
 }
 
 function Stopwatch({onRemove}: { onRemove: () => void }) {
@@ -46,31 +73,15 @@ function Stopwatch({onRemove}: { onRemove: () => void }) {
         setIsRunning(null);
     }
 
-    // could be a separate component, but it required passing down too much (isRunning + 3 functions),
-    // so it was easier to leave it here
-    function getActiveSwControls() {
-        if (isRunning) {
-            return (<>
-                <button onClick={pause} title="Pause"><FontAwesomeIcon icon={faPause} /></button>
-                <button onClick={reset} title="Reset"><FontAwesomeIcon icon={faStop} /></button>
-            </>);
-        }
-        if (isRunning !== null) {
-            return (<>
-                <button onClick={run} title="Resume"><FontAwesomeIcon icon={faPlay} /></button>
-                <button onClick={reset} title="Reset"><FontAwesomeIcon icon={faStop} /></button>
-            </>);
-        }
-        return (<button onClick={run} title="Start"><FontAwesomeIcon icon={faPlay} /></button>);
-    }
-
-    const activeSwControls = getActiveSwControls();
-
     return (
         <div className="stopwatch">
-            <button onClick={onRemove}><FontAwesomeIcon icon={faTrashCan} /></button>
-            <ClockFace isRunning={isRunning} startTime={startTime} pauseSnapshot={pauseSnapshot} />
-            {activeSwControls}
+            <RemoveButton onRemove={onRemove} />
+            <ClockFace isRunning={isRunning} startTime={startTime} pauseSnapshot={pauseSnapshot}/>
+            {isRunning
+                ? (<ButtonsWhenRunning onPause={pause} onReset={reset}/>)
+                : isRunning == null
+                    ? (<ButtonsWhenStopped onStart={run}/>)
+                    : (<ButtonsWhenPaused onResume={run} onReset={reset}/>)}
         </div>
     );
 }
@@ -99,7 +110,7 @@ function App() {
 
     return (
         <>
-            {stopwatchIds.map(id => (<Stopwatch key={id} onRemove={() => removeStopwatch(id)} />))}
+            {stopwatchIds.map(id => (<Stopwatch key={id} onRemove={() => removeStopwatch(id)}/>))}
             <div>
                 <button onClick={addStopwatch}>Add stopwatch</button>
                 <button onClick={() => setStopwatchIds([])}>Clear All</button>
